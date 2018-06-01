@@ -68,13 +68,13 @@ functions:
     command: attach.xunit_results
     params:
       files:
-        - "./lobster/*-junit.xml"
+        - "./lobster/build/*-junit.xml"
 
   results-clean:
     command: shell.exec
     type: test
     params:
-      working_dir: lobster
+      working_dir: lobster/build
       shell: bash
       continue_on_err: true
       ignore_standard_error: true
@@ -91,6 +91,14 @@ post:
       ignore_standard_error: true
       silent: true
       script: cat ./.node_cache/_logs/*.log
+  - command: shell.exec
+    params:
+      working_dir: lobster
+      shell: bash
+      continue_on_err: true
+      ignore_standard_error: true
+      silent: true
+      script: rm ./.node_cache/_logs/*.log
   - func: results-attach
   - func: results-clean
 
@@ -119,7 +127,7 @@ tasks:
       - command: generate.tasks
         params:
           files:
-            - lobster/.tasks.json
+            - lobster/build/.tasks.json
 
 
 buildvariants:

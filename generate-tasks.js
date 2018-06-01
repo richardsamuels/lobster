@@ -1,4 +1,4 @@
-const { writeFileSync, lstatSync, readdirSync } = require('fs');
+const { existsSync, mkdirSync, writeFileSync, lstatSync, readdirSync } = require('fs');
 const { join } = require('path');
 
 const scanDirs = ['server', 'src'];
@@ -66,6 +66,11 @@ var gt = {
 
 console.log('Generating tasks with the following payload: ', JSON.stringify(gt, null, 2));
 
-const outFile = join(__dirname, '.tasks.json');
+const outDir = join(__dirname, 'build');
+const outFile = join(outDir, '.tasks.json');
+if (!existsSync(outDir)) {
+  console.log('Making output directory: ', outDir);
+  mkdirSync(outDir);
+}
 console.log('Writing to: ', outFile);
 writeFileSync(outFile, JSON.stringify(gt));

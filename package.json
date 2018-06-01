@@ -46,7 +46,7 @@
   },
   "jest-junit": {
     "suiteName": "lobster jest tests",
-    "output": "./jest-junit.xml",
+    "output": "build/jest-junit.xml",
     "suiteNameTemplate": "{filename}",
     "classNameTemplate": "{filename}",
     "titleTemplate": "{title}"
