@@ -11,8 +11,8 @@ const isDirectory = source => lstatSync(source).isDirectory();
 const getDirectories = source =>
   readdirSync(source)
     .map(val => join(source, val))
-    .filter(isDirectory).reduce(reducer, []); // eslint-disable-line no-use-before-define
-const reducer = (acc, val) => acc.concat(getDirectories(val)).concat([val]);
+    .filter(isDirectory)
+    .reduce((acc, val) => acc.concat(getDirectories(val)).concat([val]), []);
 
 const endsWithAnyOf = (ends, testVal) =>
   ends.reduce((acc, val) => acc || testVal.endsWith(val), false);
@@ -20,12 +20,15 @@ const endsWithAnyOf = (ends, testVal) =>
 const isFileWithEnding = (endings, file) =>
   isFile(file) && endsWithAnyOf(endings, file);
 
-const hasJS = dir =>
-  readdirSync(dir).reduce((acc, val) => acc || isFileWithEnding(['.js', '.jsx'], join(dir, val)), false);
-
+// given a directory, return true if that directory has files ending in
+// .spec.js or .test.js
 const hasTests = dir =>
-  readdirSync(dir).reduce((acc, val) => acc || isFileWithEnding(['.spec.js', '.test.js'], join(dir, val)), false);
+  readdirSync(dir)
+    .reduce((acc, val) => acc || isFileWithEnding(['.spec.js', '.test.js'], join(dir, val)), false);
 
+// return a function that given a directory, returns a task with the given
+// prefix, npm script, and bash file glob. The directory forms the suffix of
+// the task name
 function makeTask(prefix, cmd, match) {
   return function(dir) {
     return {
@@ -48,47 +51,17 @@ function makeTask(prefix, cmd, match) {
 
 const dirs = scanDirs.reduce((acc, val) => acc.concat(getDirectories(val)), []).concat(scanDirs);
 const testDirs = dirs.filter(hasTests);
-const jsDirs = dirs.filter(hasJS);
 console.log('Will run tests in: ', testDirs);
-console.log('Will run lints in: ', jsDirs);
 
-const lintTasks = jsDirs.map(makeTask('lint', 'eslint', '*.{js,jsx}'))
-  .concat([makeTask('lint', 'eslint', '*.{js,jsx}')('.')]);
 const testTasks = testDirs.map(makeTask('test', 'test-ci', '*.{spec,test}.js'));
 var gt = {
   'buildvariants': [
     {
       'name': 'ubuntu1604',
-      'tasks': testTasks.map(task => task.name).concat(['lint-group']),
-      'display_tasks': [
-        {
-          'name': 'lint',
-          'execution_tasks': lintTasks.map(task => task.name)
-        }
-      ]
+      'tasks': testTasks.map(task => task.name)
     }
   ],
-  'task_groups': [
-    {
-      'name': 'lint-group',
-      'max_hosts': 1,
-      'tasks': lintTasks.map(task => task.name),
-      'setup_group': [
-        {
-          'func': 'preamble'
-        }
-      ],
-      'teardown_task': [
-        {
-          'func': 'results-attach'
-        },
-        {
-          'func': 'results-clean'
-        }
-      ]
-    }
-  ],
-  'tasks': testTasks.concat(lintTasks)
+  'tasks': testTasks
 };
 
 console.log('Generating tasks with the following payload: ', JSON.stringify(gt, null, 2));

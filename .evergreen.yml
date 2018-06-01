@@ -102,6 +102,14 @@ tasks:
       - func: npm
         vars:
           cmd: run-script build
+
+  - name: lint
+    commands:
+      - func: preamble
+      - func: npm
+        vars:
+          cmd: run-script eslint -- .
+
   - name: generate-tasks
     commands:
       - func: preamble
@@ -123,4 +131,5 @@ buildvariants:
       - ubuntu1604-test
     tasks:
       - name: "dist"
+      - name: "lint"
       - name: "generate-tasks"

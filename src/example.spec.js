@@ -21,7 +21,7 @@ class Test extends React.Component { // eslint-disable-line no-unused-vars
   }
 }
 
-test('<Test/>', function() {
+test('Test', function() {
   const wrapper = Enzyme.mount(<Test/>);
   assert.equal(wrapper.state('test'), true);
 });
