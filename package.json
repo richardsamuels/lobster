@@ -29,8 +29,8 @@
     "build": "react-scripts build &&  mv ./build ./build.tmp; mkdir -p ./build; mv ./build.tmp ./build/lobster",
     "test": "react-scripts test $JEST_REPORTER --env=jsdom",
     "test-ci": "JEST_REPORTER=--testResultsProcessor=jest-junit npm test",
-    "eslint": "eslint $ESLINT_REPORTER .",
-    "eslint-ci": "ESLINT_REPORTER='-f ./node_modules/eslint-junit/index.js' npm run eslint"
+    "eslint": "eslint",
+    "generate-tasks": "node generate-tasks.js"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.3",
@@ -44,12 +44,6 @@
     "eslint-plugin-react": "^7.8.2",
     "jest-junit": "^3.7.0",
     "react-test-renderer": "^15.6.2"
-  },
-  "eslint-junit": {
-    "suiteName": "lobster eslint tests",
-    "output": "./eslint-junit.xml",
-    "classNameTemplate": "{filePath}",
-    "titleTemplate": "{ruleId}-{line}:{column}"
   },
   "jest-junit": {
     "suiteName": "lobster jest tests",
