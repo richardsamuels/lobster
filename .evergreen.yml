@@ -67,6 +67,7 @@ post:
       working_dir: lobster
       shell: bash
       continue_on_err: true
+      ignore_standard_error: true
       silent: true
       script: cat ./.node_cache/_logs/*.log
 

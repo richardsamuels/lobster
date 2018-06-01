@@ -22,6 +22,9 @@
           "jsx": true
         }
       },
+      "rules": {
+        "complexity": "off"
+      }
     },
     {
       "files": "src/**/*.spec.js",
@@ -37,7 +40,7 @@
       },
     },
     {
-      "files": ["server/**/*.js"],
+      "files": "server/**/*.js",
       "env": {
         "node": true,
         "parserOptions": {
@@ -45,7 +48,8 @@
         },
       },
       "rules": {
-        "no-sync": "warn",
+        "no-sync": "off",
+        "complexity": "off"
       }
     }
   ]
