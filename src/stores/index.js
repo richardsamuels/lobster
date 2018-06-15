@@ -1,30 +1,48 @@
+// @flow
+// $FlowFixMe
 import Reflux from 'reflux';
+// $FlowFixMe
 import StateMixin from 'reflux-state-mixin';
 import Actions from '../actions';
+// $FlowFixMe
 import axios from 'axios';
 
 import { LOGKEEPER_BASE } from '../config';
+
+export type Line = {
+  +lineNumber: number,
+  +text: string,
+  +port: ?string,
+  +gitRef: ?string,
+}
+
+export type ColorMap = { [string]: string }
+
+export type Log = {
+  +lines: Line[],
+  +colorMap: ColorMap
+}
 
 const LobsterStore = Reflux.createStore({
   listenables: [Actions],
   mixins: [StateMixin.store],
   // Loads content from server
-  loadDataUrl: function(url, server) {
+  loadDataUrl: function(url: string, server: string): void {
     if (server && url !== '') {
-      console.log('server: ' + server );
-      console.log('url: ' + url );
+      console.log('server: ' + server);
+      console.log('url: ' + url);
       axios.post('http://' + server, {url: url })
         .then((response) => this.processServerResponse(response))
         .catch((error) => console.log(error));
     }
   },
 
-  getInitialState: function() {
+  getInitialState: function(): Log {
     this.loadData = this.loadData.bind(this);
     return {lines: [], colorMap: {}};
   },
 
-  generateLogkeeperUrl: function(buildParam, testParam) {
+  generateLogkeeperUrl: function(buildParam: string, testParam: ?string): string {
     if (!buildParam) {
       return '';
     }
@@ -34,7 +52,7 @@ const LobsterStore = Reflux.createStore({
     return LOGKEEPER_BASE + '/build/' + buildParam + '/test/' + testParam + '?raw=1';
   },
 
-  loadData: function(build, test, server) {
+  loadData: function(build: string, test: string, server: ?string): void {
     if (!build) {
       return;
     }
@@ -63,7 +81,7 @@ const LobsterStore = Reflux.createStore({
     return false;
   },
 
-  getFullGitRef: function(fileLine, gitVersion) {
+  getFullGitRef: function(fileLine, gitVersion): ?string {
     if (!fileLine) {
       return null;
     }
@@ -71,11 +89,11 @@ const LobsterStore = Reflux.createStore({
     return gitPrefix + gitVersion + '/' + fileLine;
   },
 
-  processServerResponse: function(response) {
+  processServerResponse: function(response): void {
     // set the url to the url we requested
     const lines = response.data.split('\n');
 
-    const processed = [];
+    const processed: Line[] = [];
     const gitPrefix = '{githash:';
     const gitPrefixLen = gitPrefix.length + 2;
     let gitVersionStr = 'master';
@@ -100,7 +118,8 @@ const LobsterStore = Reflux.createStore({
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const lineObj = {lineNumber: i};
+      let lineText = line;
+      let gitRef = undefined;
 
       // Only check the git version if we haven't seen it so far.
       if (gitVersionStr === 'master') {
@@ -114,45 +133,41 @@ const LobsterStore = Reflux.createStore({
       if (gitStartIdx !== -1) {
         const gitStopIdx = line.indexOf('}', gitStartIdx);
         if (gitStopIdx > gitStartIdx + gitPrefixLen) {
-          const fileLine = line.substr(gitStartIdx + gitPrefixLen, gitStopIdx - (gitStartIdx + gitPrefixLen) - 1);
-          const textLine = line.substr(0, gitStartIdx - 1) + line.substr(gitStopIdx + 1);
-          lineObj.text = textLine;
-          lineObj.gitRef = fileLine;
+          gitRef = line.substr(gitStartIdx + gitPrefixLen, gitStopIdx - (gitStartIdx + gitPrefixLen) - 1);
+          lineText = line.substr(0, gitStartIdx - 1) + line.substr(gitStopIdx + 1);
         }
-      } else {
-        lineObj.text = line;
       }
 
       const portArray = portRegex.exec(line);
+      let port = undefined;
       if (portArray) {
-        const port = portArray[1];
-        lineObj.port = port;
-
-        if (!colorMap[port]) {
-          colorMap[port] = colorList[Object.keys(colorMap).length];
-        }
+        port = portArray[1];
       } else {
         const stateArray = stateRegex.exec(line);
         if (stateArray) {
-          const port = stateArray[0];
-          lineObj.port = port;
-
-          if (!colorMap[port]) {
-            colorMap[port] = colorList[Object.keys(colorMap).length];
-          }
+          port = stateArray[0];
         }
       }
-
-      if (lineObj.gitRef) {
-        lineObj.gitRef = this.getFullGitRef(lineObj.gitRef, gitVersionStr);
+      if (port != null && !colorMap[port]) {
+        colorMap[port] = colorList[Object.keys(colorMap).length];
       }
-      processed.push(lineObj);
+
+      if (gitRef != null) {
+        gitRef = this.getFullGitRef(gitRef, gitVersionStr);
+      }
+
+      processed.push({
+        lineNumber: i,
+        text: lineText,
+        port: port,
+        gitRef: gitRef
+      });
     }
 
     this.triggerUpdate(processed, colorMap);
   },
 
-  triggerUpdate: function(lines, colorMap) {
+  triggerUpdate: function(lines: Line[], colorMap: ColorMap): void {
     this.setState({lines: lines, colorMap: colorMap});
     this.trigger(this.state);
   }
