@@ -1,14 +1,28 @@
-import Button from 'react-bootstrap/lib/Button';
+// @flow strict
+import { Button } from 'react-bootstrap';
 import React from 'react';
-import PropTypes from 'prop-types';
 
-export const Filters = (props) => {
+
+export type Filter = {
+  text: string,
+  on: bool,
+  inverse: bool
+}
+
+type Props = {
+  filters: Filter[],
+  removeFilter: (string) => void,
+  toggleFilter: (string) => void,
+  toggleFilterInverse: (string) => void
+}
+
+export const Filters = (props: Props) => {
   return (
     <div className="filterBox">
-      <div className="filter-box">{props.filters.map(function(filter) {
+      <div className="filter-box">{props.filters.map(function(filter, key) {
         return (
-          <Filter
-            key={JSON.stringify(filter)}
+          <FilterContainer
+            key={key}
             filter={filter}
             removeFilter={props.removeFilter}
             toggleFilter={props.toggleFilter}
@@ -21,29 +35,14 @@ export const Filters = (props) => {
   );
 };
 
-Filters.propTypes = {
-  filters: PropTypes.arrayOf(PropTypes.shape({
-    text: PropTypes.string.isRequired,
-    on: PropTypes.bool.isRequired,
-    inverse: PropTypes.bool.isRequired
-  })).isRequired,
-  removeFilter: PropTypes.func.isRequired,
-  toggleFilter: PropTypes.func.isRequired,
-  toggleFilterInverse: PropTypes.func.isRequired
-};
+type FilterProps = {
+  filter: Filter,
+  removeFilter: (string) => void,
+  toggleFilter: (string) => void,
+  toggleFilterInverse: (string) => void
+}
 
-export class Filter extends React.PureComponent {
-  static propTypes = {
-    filter: PropTypes.shape({
-      text: PropTypes.string.isRequired,
-      on: PropTypes.bool.isRequired,
-      inverse: PropTypes.bool.isRequired
-    }).isRequired,
-    removeFilter: PropTypes.func.isRequired,
-    toggleFilter: PropTypes.func.isRequired,
-    toggleFilterInverse: PropTypes.func.isRequired
-  };
-
+export class FilterContainer extends React.PureComponent<FilterProps> {
   removeFilter = () => this.props.removeFilter(this.props.filter.text);
   toggleFilter = () => this.props.toggleFilter(this.props.filter.text);
   toggleFilterInverse = () => this.props.toggleFilterInverse(this.props.filter.text);
