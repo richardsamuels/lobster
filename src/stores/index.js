@@ -1,10 +1,10 @@
-// @flow
+// @flow strict
+
 // $FlowFixMe
 import Reflux from 'reflux';
 // $FlowFixMe
 import StateMixin from 'reflux-state-mixin';
 import Actions from '../actions';
-// $FlowFixMe
 import axios from 'axios';
 
 import { LOGKEEPER_BASE } from '../config';
@@ -46,7 +46,7 @@ const LobsterStore = Reflux.createStore({
     if (!buildParam) {
       return '';
     }
-    if (!testParam) {
+    if (testParam == null) {
       return LOGKEEPER_BASE + '/build/' + buildParam + '/all?raw=1';
     }
     return LOGKEEPER_BASE + '/build/' + buildParam + '/test/' + testParam + '?raw=1';
@@ -58,7 +58,7 @@ const LobsterStore = Reflux.createStore({
     }
     const logkeeperUrl = this.generateLogkeeperUrl(build, test);
     // default to requesting from the logkeeper url
-    if (server) {
+    if (server != null) {
       console.log('server: ' + server );
       console.log('url: ' + logkeeperUrl );
       axios.post('http://' + server, {url: logkeeperUrl})
