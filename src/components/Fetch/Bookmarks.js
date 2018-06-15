@@ -1,17 +1,19 @@
+// @flow strict
 import React from 'react';
-import PropTypes from 'prop-types';
 
-export class Bookmarks extends React.PureComponent {
-  static propTypes = {
-    bookmarks: PropTypes.arrayOf(PropTypes.shape({
-      lineNumber: PropTypes.number.isRequired
-    })).isRequired,
-    setScroll: PropTypes.func.isRequired
-  }
+export type Bookmark = {
+  lineNumber: number,
+}
 
-  scroll = (event) => {
-    if (event.target.innerHTML) {
-      this.props.setScroll(parseInt(event.target.innerHTML, 10));
+type Props = {
+  bookmarks: Bookmark[],
+  setScroll: (number) => void
+}
+
+export class Bookmarks extends React.PureComponent<Props> {
+  scroll = (event: SyntheticMouseEvent<HTMLDivElement>) => {
+    if (event.currentTarget.innerHTML != null) {
+      this.props.setScroll(parseInt(event.currentTarget.innerHTML, 10));
     }
   }
 
@@ -20,7 +22,7 @@ export class Bookmarks extends React.PureComponent {
       <div className="bookmarks-bar monospace">
         <div>
           {this.props.bookmarks.map((bookmark, key) => {
-            return (<Bookmark key={key} lineNumber={bookmark.lineNumber} scrollFunc={this.scroll} />);
+            return (<BookmarkContainer key={key} lineNumber={bookmark.lineNumber} scrollFunc={this.scroll} />);
           })}
         </div>
       </div>
@@ -28,15 +30,15 @@ export class Bookmarks extends React.PureComponent {
   }
 }
 
-export const Bookmark = (props) => {
+type BookmarkProps = {
+  scrollFunc: (event: SyntheticMouseEvent<HTMLDivElement>) => void,
+  lineNumber: number
+}
+
+export const BookmarkContainer = (props: BookmarkProps) => {
   return (
     <div onClick={props.scrollFunc} key={props.lineNumber}>
       {props.lineNumber}
     </div>
   );
-};
-
-Bookmark.propTypes = {
-  lineNumber: PropTypes.number.isRequired,
-  scrollFunc: PropTypes.func.isRequired
 };

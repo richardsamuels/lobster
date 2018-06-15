@@ -1,7 +1,7 @@
 import React from 'react';
 import Enzyme from 'enzyme';
 import assert from 'assert';
-import { Bookmarks, Bookmark } from './Bookmarks';
+import { Bookmarks, BookmarkContainer } from './Bookmarks';
 
 test('Bookmarks', function() {
   let scrollTo = -1;
@@ -24,27 +24,27 @@ test('Bookmarks', function() {
   });
 
   assert.ok(wrapper.containsAllMatchingElements([
-    <Bookmark lineNumber={0} />,
-    <Bookmark lineNumber={5} />,
-    <Bookmark lineNumber={10} />,
-    <Bookmark lineNumber={20} />
+    <BookmarkContainer lineNumber={0} />,
+    <BookmarkContainer lineNumber={5} />,
+    <BookmarkContainer lineNumber={10} />,
+    <BookmarkContainer lineNumber={20} />
   ]));
   assert.ok(!wrapper.containsAllMatchingElements([
-    <Bookmark lineNumber={1} />,
-    <Bookmark lineNumber={6} />
+    <BookmarkContainer lineNumber={1} />,
+    <BookmarkContainer lineNumber={6} />
   ]));
 });
 
-test('Bookmark', function() {
+test('bookmark-container', function() {
   let scrollTo = -1;
 
   const scroll = (event) => {
-    if (event.target.innerHTML) {
+    if (event.currentTarget.innerHTML) {
       scrollTo = parseInt(event.target.innerHTML, 10);
     }
   };
 
-  const wrapper = Enzyme.mount(<Bookmark lineNumber={5} scrollFunc={scroll} />);
+  const wrapper = Enzyme.mount(<BookmarkContainer lineNumber={5} scrollFunc={scroll} />);
   wrapper.simulate('click', {});
   assert.equal(scrollTo, 5);
 });
