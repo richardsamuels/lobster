@@ -1,3 +1,4 @@
+// @flow strict
 import React from 'react';
 import { StoreConnector } from 'hadron-react-components';
 import Fetch from '../Fetch';

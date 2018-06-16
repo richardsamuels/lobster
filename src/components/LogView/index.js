@@ -2,8 +2,7 @@
 import React from 'react';
 import ReactList from 'react-list';
 import Highlighter from 'react-highlight-words';
-import PropTypes from 'prop-types';
-import type { Line, ColorMap, Bookmark, Filter } from '../../stores';
+import type { Line, ColorMap, Bookmark } from '../../stores';
 
 import './style.css';
 
@@ -18,12 +17,7 @@ type LogLineTextProps = {
 }
 
 class LogLineText extends React.PureComponent<LogLineTextProps> {
-  lineRef: ?HTMLSpanElement
-
-  constructor(props) {
-    super(props);
-    this.lineRef = null;
-  }
+  lineRef: ?HTMLSpanElement = null
 
   setRef = (element: ?HTMLSpanElement) => {
     this.lineRef = element;
@@ -81,10 +75,6 @@ type LogOptionsProps = {
 }
 
 class LogOptions extends React.PureComponent<LogOptionsProps> {
-  constructor(props) {
-    super(props);
-  }
-
   handleClick = () => {
     if (this.props.gitRef != null) {
       window.open(this.props.gitRef);

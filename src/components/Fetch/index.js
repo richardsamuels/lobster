@@ -5,7 +5,6 @@ import './style.css';
 // $FlowFixMe
 import ToggleButton from 'react-toggle-button';
 import { Button, Form, FormControl, FormGroup, Col, ControlLabel, Collapse} from 'react-bootstrap';
-// $FlowFixMe
 import LogView from '../LogView';
 import { Bookmarks } from './Bookmarks';
 import { Filters } from './Filters';
