@@ -9,6 +9,16 @@ import axios from 'axios';
 
 import { LOGKEEPER_BASE } from '../config';
 
+export type Filter = {
+  text: string,
+  on: bool,
+  inverse: bool
+}
+
+export type Bookmark = {
+  lineNumber: number,
+}
+
 export type Line = {
   +lineNumber: number,
   +text: string,

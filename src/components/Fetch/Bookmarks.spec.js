@@ -24,14 +24,14 @@ test('Bookmarks', function() {
   });
 
   assert.ok(wrapper.containsAllMatchingElements([
-    <BookmarkContainer lineNumber={0} />,
-    <BookmarkContainer lineNumber={5} />,
-    <BookmarkContainer lineNumber={10} />,
-    <BookmarkContainer lineNumber={20} />
+    <Bookmark lineNumber={0} />,
+    <Bookmark lineNumber={5} />,
+    <Bookmark lineNumber={10} />,
+    <Bookmark lineNumber={20} />
   ]));
   assert.ok(!wrapper.containsAllMatchingElements([
-    <BookmarkContainer lineNumber={1} />,
-    <BookmarkContainer lineNumber={6} />
+    <Bookmark lineNumber={1} />,
+    <Bookmark lineNumber={6} />
   ]));
 });
 
@@ -44,7 +44,7 @@ test('bookmark-container', function() {
     }
   };
 
-  const wrapper = Enzyme.mount(<BookmarkContainer lineNumber={5} scrollFunc={scroll} />);
+  const wrapper = Enzyme.mount(<Bookmark lineNumber={5} scrollFunc={scroll} />);
   wrapper.simulate('click', {});
   assert.equal(scrollTo, 5);
 });

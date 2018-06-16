@@ -1,13 +1,7 @@
 // @flow strict
 import { Button } from 'react-bootstrap';
 import React from 'react';
-
-
-export type Filter = {
-  text: string,
-  on: bool,
-  inverse: bool
-}
+import type { Filter } from '../../stores';
 
 type Props = {
   filters: Filter[],
