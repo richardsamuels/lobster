@@ -1,7 +1,7 @@
 import React from 'react';
 import Enzyme from 'enzyme';
 import assert from 'assert';
-import { Bookmarks, BookmarkContainer } from './Bookmarks';
+import { Bookmarks, Bookmark } from './Bookmarks';
 
 test('Bookmarks', function() {
   let scrollTo = -1;

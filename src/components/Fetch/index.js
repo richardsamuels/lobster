@@ -38,10 +38,10 @@ type State = {
   scrollLine: number,
   server: ?string,
   url: ?string,
-  wrap: bool,
-  caseSensitive: bool,
-  filterIntersection: bool,
-  detailsOpen: bool,
+  wrap: boolean,
+  caseSensitive: boolean,
+  filterIntersection: boolean,
+  detailsOpen: boolean,
   find: string,
   findIdx: number,
   findResults: number[],
@@ -174,9 +174,9 @@ class Fetch extends React.Component<Props, State> {
     for (let i = 0; i < filters.length; i++) {
       searchParams.append('f', this.makeFilterURLString(filters[i]));
     }
-    //if (parsedParams.scrollLine) {
+    // if (parsedParams.scrollLine) {
     //  searchParams.append('scroll', parsedParams.scrollLine);
-    //}
+    // }
     if (bookmarks.length > 0) {
       let bookmarkStr = '';
       for (let i = 0; i < bookmarks.length; i++) {
@@ -342,8 +342,8 @@ class Fetch extends React.Component<Props, State> {
   }
 
   addFilter = () => {
-    let value = this.findInput ? this.findInput.value : '';
-    if(value === '' || this.state.filterList.find((elem) => elem.text === value)) {
+    const value = this.findInput ? this.findInput.value : '';
+    if (value === '' || this.state.filterList.find((elem) => elem.text === value)) {
       return;
     }
     const newFilters = this.state.filterList.slice();
@@ -383,7 +383,7 @@ class Fetch extends React.Component<Props, State> {
     this.clearFind();
   }
 
-  makeRegexp(regexp: string, caseSensitive: bool) {
+  makeRegexp(regexp: string, caseSensitive: boolean) {
     if (!regexp) {
       return '';
     }
@@ -394,13 +394,13 @@ class Fetch extends React.Component<Props, State> {
     return new RegExp(regexp);
   }
 
-  mergeActiveFilters(filterList: Filter[], caseSensitive: bool): RegExp[] {
+  mergeActiveFilters(filterList: Filter[], caseSensitive: boolean): RegExp[] {
     return filterList
       .filter((elem) => elem.on && !elem.inverse)
       .map((elem) => caseSensitive ? new RegExp(elem.text) : new RegExp(elem.text, 'i'));
   }
 
-  mergeActiveInverseFilters(filterList: Filter[], caseSensitive: bool): RegExp[] {
+  mergeActiveInverseFilters(filterList: Filter[], caseSensitive: boolean): RegExp[] {
     return filterList
       .filter((elem) => elem.on && elem.inverse)
       .map((elem) => caseSensitive ? new RegExp(elem.text) : new RegExp(elem.text, 'i'));
@@ -409,7 +409,7 @@ class Fetch extends React.Component<Props, State> {
   // Checks a given string against a list of regular expression filters
   // If isIntersection === false, will return true if the string matches at least one regex
   // Otherwise, will return true if the string matches all regexes
-  matchFilters(filter: RegExp[], string: string, isIntersection: bool = false) {
+  matchFilters(filter: RegExp[], string: string, isIntersection: boolean = false) {
     if (isIntersection) {
       return filter.every(regex => string.match(regex));
     }
@@ -444,12 +444,12 @@ class Fetch extends React.Component<Props, State> {
     if (this.state.find !== '' ) {
       if (this.state.findResults.length > 0) {
         return (
-          <span><Col lg={1} componentClass='ControlLabel' >{this.state.findIdx + 1}/{this.state.findResults.length}</Col>
+          <span><Col lg={1} componentClass="ControlLabel" >{this.state.findIdx + 1}/{this.state.findResults.length}</Col>
             <Button onClick={this.nextFind}>Next</Button>
             <Button onClick={this.prevFind}>Prev</Button>
           </span>);
       }
-      return <Col lg={1} componentClass='ControlLabel' className="not-found" >Not Found</Col>;
+      return <Col lg={1} componentClass="ControlLabel" className="not-found" >Not Found</Col>;
     }
   }
 
@@ -519,7 +519,7 @@ class Fetch extends React.Component<Props, State> {
     }
   }
 
-  toggleFilterIntersection = (value: bool) => {
+  toggleFilterIntersection = (value: boolean) => {
     this.setState({filterIntersection: !value});
   }
 
@@ -549,7 +549,7 @@ class Fetch extends React.Component<Props, State> {
   focusOnFind(event: Event) {
     if (this.findInput != null) {
       this.findInput.focus();
-      //this.findInput.select();
+      // this.findInput.select();
     }
     event.preventDefault();
   }
@@ -558,7 +558,7 @@ class Fetch extends React.Component<Props, State> {
     this.find(new Event(''));
   }
 
-  toggleWrap = (value: bool) => this.setState({wrap: !value});
+  toggleWrap = (value: boolean) => this.setState({wrap: !value});
   togglePanel = () => this.setState((state) => ({detailsOpen: !state.detailsOpen}));
   setFormRef = (ref: ?HTMLInputElement) => {this.findInput = ref;}
 
@@ -590,13 +590,13 @@ class Fetch extends React.Component<Props, State> {
                   <Form horizontal onSubmit={this.handleSubmit}>
                     {this.showLogBox()}
                     <FormGroup controlId="wrap">
-                      <Col componentClass='ControlLabel' lg={1}>Wrap</Col>
+                      <Col componentClass="ControlLabel" lg={1}>Wrap</Col>
                       <Col lg={1}><ToggleButton value={this.state.wrap || false} onToggle={this.toggleWrap} /></Col>
-                      <Col componentClass='ControlLabel' lg={1}>Case Sensitive</Col>
+                      <Col componentClass="ControlLabel" lg={1}>Case Sensitive</Col>
                       <Col lg={1}><ToggleButton value={this.state.caseSensitive || false} onToggle={this.toggleCaseSensitive} /></Col>
-                      <Col componentClass='ControlLabel' lg={1}>Filter Logic</Col>
+                      <Col componentClass="ControlLabel" lg={1}>Filter Logic</Col>
                       <Col lg={1}><ToggleButton inactiveLabel={'OR'} activeLabel={'AND'} value={this.state.filterIntersection || false} onToggle={this.toggleFilterIntersection} /></Col>
-                      <Col componentClass='ControlLabel' lg={1}>JIRA</Col>
+                      <Col componentClass="ControlLabel" lg={1}>JIRA</Col>
                       <Col lg={1}><textarea readOnly className="unmoving" value={this.showJIRA()}></textarea></Col>
                       {this.showJobLogs()}
                       {this.showRaw()}

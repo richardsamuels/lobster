@@ -1,11 +1,12 @@
+// @flow strict
 import React from 'react';
+// $FlowFixMe
 import { Switch, Route } from 'react-router-dom';
 import './style.css';
 import About from '../About/index.js';
-import ConnectedFetch from '../ConnectedFetch/index.js';
-import NotFound from '../NotFound/index.js';
-import Nav from 'react-bootstrap/lib/Nav';
-import NavItem from 'react-bootstrap/lib/NavItem';
+import ConnectedFetch from '../ConnectedFetch';
+import NotFound from '../NotFound';
+import { Nav, NavItem } from 'react-bootstrap';
 
 const Main = () => (
   <main>

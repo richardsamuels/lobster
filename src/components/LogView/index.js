@@ -7,11 +7,11 @@ import type { Line, ColorMap, Bookmark } from '../../stores';
 import './style.css';
 
 type LogLineTextProps = {
-  caseSensitive: bool,
+  caseSensitive: boolean,
   colorMap: {},
   find: string,
   lineNumber: number,
-  lineRefCallback: (?HTMLSpanElement, number, ?bool) => void,
+  lineRefCallback: (?HTMLSpanElement, number, ?boolean) => void,
   port: ?string,
   text: string
 }
@@ -91,15 +91,15 @@ class LogOptions extends React.PureComponent<LogOptionsProps> {
 }
 
 type FullLogLineProps = {
-    bookmarked: bool,
-    caseSensitive: bool,
+    bookmarked: boolean,
+    caseSensitive: boolean,
     colorMap: {},
     find: string,
-    found: bool,
+    found: boolean,
     line: Line,
-    lineRefCallback: (element: ?HTMLSpanElement, line: number, isUnmount: ?bool) => void,
+    lineRefCallback: (element: ?HTMLSpanElement, line: number, isUnmount: ?boolean) => void,
     toggleBookmark: (number) => void,
-    wrap: bool
+    wrap: boolean
 }
 
 class FullLogLine extends React.PureComponent<FullLogLineProps> {
@@ -130,16 +130,16 @@ class FullLogLine extends React.PureComponent<FullLogLineProps> {
 type LogViewProps = {
   findLine: number,
   bookmarks: Bookmark[],
-  wrap: bool,
+  wrap: boolean,
   toggleBookmark: (number) => void,
   colorMap: ColorMap,
   find: string,
-  caseSensitive: bool,
+  caseSensitive: boolean,
   scrollLine: number,
   lines: Line[],
   filter: RegExp[],
   inverseFilter: RegExp[],
-  shouldPrintLine: (Bookmark[], Line, RegExp[], RegExp[]) => bool,
+  shouldPrintLine: (Bookmark[], Line, RegExp[], RegExp[]) => boolean,
   findBookmark: (Bookmark[], number) => number
 }
 
@@ -165,7 +165,7 @@ class LogView extends React.Component<LogViewProps, LogViewState> {
     this.logListRef = element;
   };
 
-  lineRefCallback = (element: ?HTMLSpanElement, line: number, isUnmount: ?bool = undefined) => {
+  lineRefCallback = (element: ?HTMLSpanElement, line: number, isUnmount: ?boolean = undefined) => {
     if (isUnmount === true) {
       this.state.lineMap.delete(line);
     } else {
@@ -239,7 +239,7 @@ class LogView extends React.Component<LogViewProps, LogViewState> {
     if (this.props.findLine < 0 || !(this.props.findLine in this.state.lineMap)) {
       return;
     }
-    const ele = this.state.lineMap.get(this.props.findLine)
+    const ele = this.state.lineMap.get(this.props.findLine);
     const findElements = ele != null ? ele.getElementsByClassName('findResult' + this.props.findLine) : [];
     if (findElements.length > 0) {
       const elem = findElements[0];

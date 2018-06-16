@@ -11,8 +11,8 @@ import { LOGKEEPER_BASE } from '../config';
 
 export type Filter = {
   text: string,
-  on: bool,
-  inverse: bool
+  on: boolean,
+  inverse: boolean
 }
 
 export type Bookmark = {
