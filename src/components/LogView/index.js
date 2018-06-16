@@ -1,30 +1,33 @@
+// @flow strict
 import React from 'react';
 import ReactList from 'react-list';
 import Highlighter from 'react-highlight-words';
 import PropTypes from 'prop-types';
+import type { Line, ColorMap, Bookmark, Filter } from '../../stores';
 
 import './style.css';
 
+type LogLineTextProps = {
+  caseSensitive: bool,
+  colorMap: {},
+  find: string,
+  lineNumber: number,
+  lineRefCallback: (?HTMLSpanElement, number, ?bool) => void,
+  port: ?string,
+  text: string
+}
 
-class LogLineText extends React.Component {
-  static propTypes = {
-    caseSensitive: PropTypes.bool,
-    colorMap: PropTypes.object,
-    find: PropTypes.string,
-    lineNumber: PropTypes.number,
-    lineRefCallback: PropTypes.func,
-    port: PropTypes.string,
-    text: PropTypes.string
-  };
+class LogLineText extends React.PureComponent<LogLineTextProps> {
+  lineRef: ?HTMLSpanElement
 
   constructor(props) {
     super(props);
-    this.state = {};
     this.lineRef = null;
-    this.setRef = element => {
-      this.lineRef = element;
-    };
   }
+
+  setRef = (element: ?HTMLSpanElement) => {
+    this.lineRef = element;
+  };
 
   componentDidMount() {
     if (this.lineRef) {
@@ -39,8 +42,9 @@ class LogLineText extends React.Component {
   }
 
   render() {
-    const style = {color: this.props.colorMap[this.props.port]};
-    const highlightStyle = {color: this.props.colorMap[this.props.port], 'backgroundImage': 'inherit', 'backgroundColor': 'pink'};
+    const color = this.props.port != null ? this.props.colorMap[this.props.port] : '';
+    const style = {color: color};
+    const highlightStyle = {color: color, 'backgroundImage': 'inherit', 'backgroundColor': 'pink'};
     return (
       <span ref={this.setRef}>
         <Highlighter
@@ -56,19 +60,15 @@ class LogLineText extends React.Component {
   }
 }
 
-class LineNumber extends React.Component {
-  static propTypes = {
-    toggleBookmark: PropTypes.func,
-    lineNumber: PropTypes.number
-  };
+type LineNumberProps = {
+  toggleBookmark: (number) => void,
+  lineNumber: number,
+};
 
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.handleDoubleClick = () => {
-      this.props.toggleBookmark(this.props.lineNumber);
-    };
-  }
+class LineNumber extends React.PureComponent<LineNumberProps> {
+  handleDoubleClick = () => {
+    this.props.toggleBookmark(this.props.lineNumber);
+  };
 
   render() {
     const style = {width: '60px', display: 'inline-block'};
@@ -76,54 +76,43 @@ class LineNumber extends React.Component {
   }
 }
 
-class LogOptions extends React.Component {
-  static propTypes = {
-    gitRef: PropTypes.any
-  };
+type LogOptionsProps = {
+  gitRef: ?string
+}
 
+class LogOptions extends React.PureComponent<LogOptionsProps> {
   constructor(props) {
     super(props);
-    this.state = {};
   }
 
   handleClick = () => {
-    if (this.props.gitRef) {
+    if (this.props.gitRef != null) {
       window.open(this.props.gitRef);
     }
   }
 
   render() {
     const style = {width: '30px', display: 'inline-block'};
-    if (this.props.gitRef) {
+    if (this.props.gitRef != null) {
       return <span style={style} data-pseudo-content="&nbsp;&#128279;&nbsp;" onClick={this.handleClick}></span>;
     }
     return <span style={style}></span>;
   }
 }
 
-class FullLogLine extends React.Component {
-  static propTypes = {
-    bookmarked: PropTypes.bool,
-    caseSensitive: PropTypes.bool,
-    colorMap: PropTypes.object,
-    find: PropTypes.string,
-    found: PropTypes.bool,
-    line: PropTypes.shape({
-      gitRef: PropTypes.any,
-      lineNumber: PropTypes.number,
-      port: PropTypes.string,
-      text: PropTypes.string
-    }),
-    lineRefCallback: PropTypes.func,
-    toggleBookmark: PropTypes.func,
-    wrap: PropTypes.bool
-  };
+type FullLogLineProps = {
+    bookmarked: bool,
+    caseSensitive: bool,
+    colorMap: {},
+    find: string,
+    found: bool,
+    line: Line,
+    lineRefCallback: (element: ?HTMLSpanElement, line: number, isUnmount: ?bool) => void,
+    toggleBookmark: (number) => void,
+    wrap: bool
+}
 
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
-
+class FullLogLine extends React.PureComponent<FullLogLineProps> {
   render() {
     let className = 'monospace hover-highlight inline';
     if (this.props.bookmarked) {
@@ -148,44 +137,53 @@ class FullLogLine extends React.Component {
   }
 }
 
-class LogView extends React.Component {
-  static propTypes = {
-    findBookmark: PropTypes.func,
-    findLine: PropTypes.number,
-    bookmarks: PropTypes.array,
-    wrap: PropTypes.bool,
-    toggleBookmark: PropTypes.func,
-    colorMap: PropTypes.object,
-    find: PropTypes.string,
-    caseSensitive: PropTypes.bool,
-    scrollLine: PropTypes.number,
-    lines: PropTypes.array,
-    filter: PropTypes.array,
-    inverseFilter: PropTypes.array,
-    shouldPrintLine: PropTypes.func
-  };
-  constructor(props) {
+type LogViewProps = {
+  findLine: number,
+  bookmarks: Bookmark[],
+  wrap: bool,
+  toggleBookmark: (number) => void,
+  colorMap: ColorMap,
+  find: string,
+  caseSensitive: bool,
+  scrollLine: number,
+  lines: Line[],
+  filter: RegExp[],
+  inverseFilter: RegExp[],
+  shouldPrintLine: (Bookmark[], Line, RegExp[], RegExp[]) => bool,
+  findBookmark: (Bookmark[], number) => number
+}
+
+type LogViewState = {
+  processed: string,
+  lineMap: Map<number, ?HTMLSpanElement>
+}
+
+class LogView extends React.Component<LogViewProps, LogViewState> {
+  logListRef: ?ReactList = null
+  indexMap: { [number]: number } = {}
+  filteredLines: Line[]
+
+  constructor(props: LogViewProps) {
     super(props);
     this.state = {
       processed: '',
       lineMap: new Map()
     };
-    this.logListRef = null;
-    this.indexMap = {};
-    this.setLogListRef = element => {
-      this.logListRef = element;
-    };
-    this.lineRefCallback = (element, line, isUnmount) => {
-      if (isUnmount === true) {
-        this.state.lineMap.delete(line);
-      } else {
-        this.state.lineMap[line] = element;
-      }
-    };
-    this.filteredLines = [];
   }
 
-  genList = (index, key) => {
+  setLogListRef = (element: ?ReactList) => {
+    this.logListRef = element;
+  };
+
+  lineRefCallback = (element: ?HTMLSpanElement, line: number, isUnmount: ?bool = undefined) => {
+    if (isUnmount === true) {
+      this.state.lineMap.delete(line);
+    } else {
+      this.state.lineMap.set(line, element);
+    }
+  };
+
+  genList = (index: number, key: number) => {
     return (
       <FullLogLine
         lineRefCallback={this.lineRefCallback}
@@ -202,17 +200,19 @@ class LogView extends React.Component {
     );
   }
 
-  scrollToLine(lineNumber) {
+  scrollToLine(lineNumber: number) {
     let scrollIndex = this.indexMap[lineNumber] - 20;
     if (scrollIndex < 0) {
       scrollIndex = 0;
     }
-    this.logListRef.scrollTo(scrollIndex);
+    if (this.logListRef != null) {
+      this.logListRef.scrollTo(scrollIndex);
+    }
 
     window.scrollBy(0, -45);
   }
 
-  shouldComponentUpdate(nextProps, _nextState) {
+  shouldComponentUpdate(nextProps: LogViewProps) {
     if (nextProps.scrollLine !== null && nextProps.scrollLine >= 0) {
       this.scrollToLine(nextProps.scrollLine);
     }
@@ -249,8 +249,8 @@ class LogView extends React.Component {
     if (this.props.findLine < 0 || !(this.props.findLine in this.state.lineMap)) {
       return;
     }
-    const findElements = this.state.lineMap[this.props.findLine]
-      .getElementsByClassName('findResult' + this.props.findLine);
+    const ele = this.state.lineMap.get(this.props.findLine)
+    const findElements = ele != null ? ele.getElementsByClassName('findResult' + this.props.findLine) : [];
     if (findElements.length > 0) {
       const elem = findElements[0];
       const position = elem.getBoundingClientRect();
@@ -267,7 +267,7 @@ class LogView extends React.Component {
     }
   }
 
-  componentDidUpdate(prevProps, _prevState) {
+  componentDidUpdate(prevProps: LogViewProps, _prevState: LogViewState) {
     if (this.props.scrollLine !== null && this.props.scrollLine >= 0 && this.props.scrollLine !== prevProps.scrollLine) {
       this.scrollToLine(this.props.scrollLine);
     }
