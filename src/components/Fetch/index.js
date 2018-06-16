@@ -1,38 +1,65 @@
+// @flow strict
 import React from 'react';
 import Actions from '../../actions';
 import './style.css';
+// $FlowFixMe
 import ToggleButton from 'react-toggle-button';
-import Button from 'react-bootstrap/lib/Button';
-import Form from 'react-bootstrap/lib/Form';
-import FormControl from 'react-bootstrap/lib/FormControl';
-import FormGroup from 'react-bootstrap/lib/FormGroup';
-import Col from 'react-bootstrap/lib/Col';
-import ControlLabel from 'react-bootstrap/lib/ControlLabel';
-import Collapse from 'react-bootstrap/lib/Collapse';
-import LogView from '../LogView/index';
+import { Button, Form, FormControl, FormGroup, Col, ControlLabel, Collapse} from 'react-bootstrap';
+// $FlowFixMe
+import LogView from '../LogView';
 import PropTypes from 'prop-types';
-import { Bookmarks } from './Bookmarks';
-import { Filters } from './Filters';
+import { Bookmarks, type Bookmark } from './Bookmarks';
+import { Filters, type Filter } from './Filters';
 
+import type { Line, ColorMap } from '../../stores';
+
+type Params = {
+  build: string,
+  test: string,
+}
+
+type History = {
+  pathname: string,
+  search: string
+}
+
+type Props = {
+  lines: Line[],
+  location: {
+    search: string,
+  },
+  match: {
+    params: Params
+  },
+  history: History[],
+  colorMap: ColorMap,
+}
+
+type State = {
+  build: string,
+  test: string,
+  scrollLine: number,
+  server: ?string,
+  url: ?string,
+  wrap: bool,
+  caseSensitive: bool,
+  filterIntersection: bool,
+  detailsOpen: bool,
+  find: string,
+  findIdx: number,
+  findResults: number[],
+  bookmarks: Bookmark[],
+  filterList: Filter[],
+  scrollLine: number,
+  filter: ?string
+}
 
 // eslint-disable-next-line react/no-deprecated
-class Fetch extends React.Component {
-  static propTypes = {
-    lines: PropTypes.array,
-    location: PropTypes.shape({
-      search: PropTypes.string
-    }),
-    match: PropTypes.shape({
-      params: PropTypes.shape({
-        build: PropTypes.string,
-        test: PropTypes.string
-      })
-    }),
-    history: PropTypes.object,
-    colorMap: PropTypes.object
-  };
+class Fetch extends React.Component<Props, State> {
+  urlInput: ?HTMLInputElement
+  findInput: ?HTMLInputElement
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     // this.componentWillReceiveProps = this.componentWillReceiveProps(this);
     const searchParams = new URLSearchParams(props.location.search);
@@ -53,6 +80,7 @@ class Fetch extends React.Component {
       filterIntersection: false,
       detailsOpen: false,
       filterList: searchParams.getAll('f').map((f) => ({text: f.substring(2), on: (f.charAt(0) === '1'), inverse: (f.charAt(1) === '1')})),
+      filter: undefined,
       find: '',
       findIdx: -1,
       findResults: [],
@@ -85,7 +113,7 @@ class Fetch extends React.Component {
     return {build: this.state.build, test: this.state.test};
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: Props) {
     console.log('componentWillReceiveProps');
     const params = nextProps.match.params;
     const searchParams = new URLSearchParams(nextProps.location.search);
@@ -127,7 +155,7 @@ class Fetch extends React.Component {
     }
   }
 
-  makeFilterURLString(filter) {
+  makeFilterURLString(filter: Filter): string {
     let res = '';
     res += (filter.on ? '1' : '0');
     res += (filter.inverse ? '1' : '0');
@@ -135,7 +163,7 @@ class Fetch extends React.Component {
     return res;
   }
 
-  updateURL(bookmarks, filters) {
+  updateURL(bookmarks: Bookmark[], filters: Filter[]) {
     const parsedParams = this.getUrlParams();
     const searchParams = new URLSearchParams();
 
@@ -149,9 +177,9 @@ class Fetch extends React.Component {
     for (let i = 0; i < filters.length; i++) {
       searchParams.append('f', this.makeFilterURLString(filters[i]));
     }
-    if (parsedParams.scrollLine) {
-      searchParams.append('scroll', parsedParams.scrollLine);
-    }
+    //if (parsedParams.scrollLine) {
+    //  searchParams.append('scroll', parsedParams.scrollLine);
+    //}
     if (bookmarks.length > 0) {
       let bookmarkStr = '';
       for (let i = 0; i < bookmarks.length; i++) {
@@ -162,7 +190,7 @@ class Fetch extends React.Component {
       }
       searchParams.append('bookmarks', bookmarkStr);
     }
-    if (this.state.server) {
+    if (this.state.server != null) {
       searchParams.append('server', this.state.server);
     }
     this.props.history.push({
@@ -171,38 +199,39 @@ class Fetch extends React.Component {
     });
   }
 
-  handleSubmit = (event) => {
+  handleSubmit = (event: KeyboardEvent) => {
     console.log('handleSubmit');
     event.preventDefault();
     // prepare do to the change
-    if (this.urlInput && this.urlInput.value && !this.state.server) {
+    if (this.urlInput && this.urlInput.value && this.state.server == null) {
       console.log('must set a server parameter for a custom log URL');
       return;
     }
 
     this.updateURL(this.state.bookmarks, this.state.filterList);
 
-    if (this.urlInput.value !== this.state.url) {
-      this.setState({url: this.urlInput.value, bookmarks: [], findResults: [], findIdx: -1});
-      Actions.loadDataUrl(this.urlInput.value, this.state.server);
+    if (this.urlInput && this.urlInput.value !== this.state.url) {
+      const v = this.urlInput.value;
+      this.setState({url: v, bookmarks: [], findResults: [], findIdx: -1});
+      Actions.loadDataUrl(v, this.state.server);
     }
   }
 
-  setScroll = (lineNum) => {
+  setScroll = (lineNum: number) => {
     this.setState({scrollLine: lineNum});
   }
 
-  findBookmark(bookmarkList, lineNum) {
+  findBookmark(bookmarkList: Bookmark[], lineNum: number) {
     return bookmarkList.findIndex(function(bookmark) {
       return bookmark.lineNumber === lineNum;
     });
   }
 
-  bookmarkSort(b1, b2) {
+  bookmarkSort(b1: Bookmark, b2: Bookmark) {
     return b1.lineNumber - b2.lineNumber;
   }
 
-  toggleBookmark = (lineNum) => {
+  toggleBookmark = (lineNum: number) => {
     const newBookmarks = this.state.bookmarks.slice();
     const i = this.findBookmark(newBookmarks, lineNum);
     if (i === -1) {
@@ -215,8 +244,8 @@ class Fetch extends React.Component {
     this.updateURL(newBookmarks, this.state.filterList);
   }
 
-  ensureBookmark(lineNum, bookmarks) {
-    const newBookmarks = bookmarks.slice();
+  ensureBookmark(lineNum: number, bookmarks: Bookmark[]) {
+    const newBookmarks: Bookmark[] = bookmarks.slice();
     const i = this.findBookmark(newBookmarks, lineNum);
     if (i === -1) {
       newBookmarks.push({lineNumber: lineNum});
@@ -243,9 +272,12 @@ class Fetch extends React.Component {
     this.setScroll(this.state.findResults[nextIdx]);
   }
 
-  find = ( event) => {
+  find = (event: Event) => {
     if (event) {
       event.preventDefault();
+    }
+    if (!this.findInput) {
+      return;
     }
     const findRegexp = this.findInput.value;
 
@@ -285,7 +317,7 @@ class Fetch extends React.Component {
     this.setState({find: '', findIdx: -1, findResults: []});
   }
 
-  shouldPrintLine = (bookmarks, line, filter, inverseFilter) => {
+  shouldPrintLine = (bookmarks: Bookmark[], line: Line, filter: RegExp[], inverseFilter: RegExp[]) => {
     if (this.findBookmark(bookmarks, line.lineNumber) !== -1) {
       return true;
     }
@@ -313,17 +345,18 @@ class Fetch extends React.Component {
   }
 
   addFilter = () => {
-    if (this.findInput.value === '' || this.state.filterList.find((elem) => elem.text === this.findInput.value)) {
+    let value = this.findInput ? this.findInput.value : '';
+    if(value === '' || this.state.filterList.find((elem) => elem.text === value)) {
       return;
     }
     const newFilters = this.state.filterList.slice();
-    newFilters.push({text: this.findInput.value, on: true, inverse: false});
+    newFilters.push({text: value, on: true, inverse: false});
     this.setState({filterList: newFilters});
     this.updateURL(this.state.bookmarks, newFilters);
     this.clearFind();
   }
 
-  toggleFilter = (text) => {
+  toggleFilter = (text: string) => {
     const newFilters = this.state.filterList.slice();
     const filterIdx = newFilters.findIndex((elem) => text === elem.text);
     newFilters[filterIdx].on = !newFilters[filterIdx].on;
@@ -333,7 +366,7 @@ class Fetch extends React.Component {
     this.clearFind();
   }
 
-  toggleFilterInverse = (text) => {
+  toggleFilterInverse = (text: string) => {
     const newFilters = this.state.filterList.slice();
     const filterIdx = newFilters.findIndex((elem) => text === elem.text);
     newFilters[filterIdx].inverse = !newFilters[filterIdx].inverse;
@@ -343,7 +376,7 @@ class Fetch extends React.Component {
     this.clearFind();
   }
 
-  removeFilter = (text) => {
+  removeFilter = (text: string) => {
     const newFilters = this.state.filterList.slice();
     const filterIdx = newFilters.findIndex((elem) => text === elem.text);
     newFilters.splice(filterIdx, 1);
@@ -353,7 +386,7 @@ class Fetch extends React.Component {
     this.clearFind();
   }
 
-  makeRegexp(regexp, caseSensitive) {
+  makeRegexp(regexp: string, caseSensitive: bool) {
     if (!regexp) {
       return '';
     }
@@ -364,13 +397,13 @@ class Fetch extends React.Component {
     return new RegExp(regexp);
   }
 
-  mergeActiveFilters(filterList, caseSensitive) {
+  mergeActiveFilters(filterList: Filter[], caseSensitive: bool): RegExp[] {
     return filterList
       .filter((elem) => elem.on && !elem.inverse)
       .map((elem) => caseSensitive ? new RegExp(elem.text) : new RegExp(elem.text, 'i'));
   }
 
-  mergeActiveInverseFilters(filterList, caseSensitive) {
+  mergeActiveInverseFilters(filterList: Filter[], caseSensitive: bool): RegExp[] {
     return filterList
       .filter((elem) => elem.on && elem.inverse)
       .map((elem) => caseSensitive ? new RegExp(elem.text) : new RegExp(elem.text, 'i'));
@@ -379,7 +412,7 @@ class Fetch extends React.Component {
   // Checks a given string against a list of regular expression filters
   // If isIntersection === false, will return true if the string matches at least one regex
   // Otherwise, will return true if the string matches all regexes
-  matchFilters(filter, string, isIntersection) {
+  matchFilters(filter: RegExp[], string: string, isIntersection: bool = false) {
     if (isIntersection) {
       return filter.every(regex => string.match(regex));
     }
@@ -414,12 +447,12 @@ class Fetch extends React.Component {
     if (this.state.find !== '' ) {
       if (this.state.findResults.length > 0) {
         return (
-          <span><Col lg={1} componentClass={ControlLabel} >{this.state.findIdx + 1}/{this.state.findResults.length}</Col>
+          <span><Col lg={1} componentClass='ControlLabel' >{this.state.findIdx + 1}/{this.state.findResults.length}</Col>
             <Button onClick={this.nextFind}>Next</Button>
             <Button onClick={this.prevFind}>Prev</Button>
           </span>);
       }
-      return <Col lg={1} componentClass={ControlLabel} className="not-found" >Not Found</Col>;
+      return <Col lg={1} componentClass='ControlLabel' className="not-found" >Not Found</Col>;
     }
   }
 
@@ -445,10 +478,10 @@ class Fetch extends React.Component {
     return text;
   }
 
-  setURLRef = (ref) => {this.urlInput = ref;}
+  setURLRef = (ref: ?HTMLInputElement) => {this.urlInput = ref;}
 
   showLogBox() {
-    if (this.state.server) {
+    if (this.state.server != null) {
       return (
         <FormGroup controlId="urlInput">
           <Col componentClass={ControlLabel} lg={1}>Log</Col>
@@ -467,29 +500,29 @@ class Fetch extends React.Component {
   }
 
   showJobLogs() {
-    if (!this.state.server) {
+    if (this.state.server == null) {
       return (<Col lg={1}><Button href={'/build/' + this.state.build}>Job Logs</Button></Col>);
     }
   }
 
-  toggleCaseSensitive = (value) => {
+  toggleCaseSensitive = (value: boolean) => {
     this.setState({caseSensitive: !value});
-    this.find(!value);
+    this.find(new Event(''));
   }
 
   showRaw() {
-    if (!this.state.server) {
+    if (this.state.server == null) {
       return (<Col lg={1}><Button href={'/build/' + this.state.build + '/all?raw=1'}>Raw</Button></Col>);
     }
   }
 
   showHTML() {
-    if (!this.state.server) {
+    if (this.state.server == null) {
       return (<Col lg={1}><Button href={'/build/' + this.state.build + '/all?html=1'}>HTML</Button></Col>);
     }
   }
 
-  toggleFilterIntersection = (value) => {
+  toggleFilterIntersection = (value: bool) => {
     this.setState({filterIntersection: !value});
   }
 
@@ -501,7 +534,7 @@ class Fetch extends React.Component {
     document.removeEventListener('keydown', this.handleKeyDown);
   }
 
-  handleKeyDown = (event) => {
+  handleKeyDown = (event: KeyboardEvent) => {
     switch ( event.keyCode ) {
       case 114: // F3
         this.focusOnFind(event);
@@ -516,19 +549,21 @@ class Fetch extends React.Component {
     }
   }
 
-  focusOnFind(event) {
-    this.findInput.focus();
-    this.findInput.select();
+  focusOnFind(event: Event) {
+    if (this.findInput != null) {
+      this.findInput.focus();
+      //this.findInput.select();
+    }
     event.preventDefault();
   }
 
   handleChangeFindEvent = () => {
-    this.find(this.state.caseSensitive);
+    this.find(new Event(''));
   }
 
-  toggleWrap = (value) => this.setState({wrap: !value});
+  toggleWrap = (value: bool) => this.setState({wrap: !value});
   togglePanel = () => this.setState((state) => ({detailsOpen: !state.detailsOpen}));
-  setFormRef = (ref) => {this.findInput = ref;}
+  setFormRef = (ref: ?HTMLInputElement) => {this.findInput = ref;}
 
   render() {
     return (
@@ -558,13 +593,13 @@ class Fetch extends React.Component {
                   <Form horizontal onSubmit={this.handleSubmit}>
                     {this.showLogBox()}
                     <FormGroup controlId="wrap">
-                      <Col componentClass={ControlLabel} lg={1}>Wrap</Col>
+                      <Col componentClass='ControlLabel' lg={1}>Wrap</Col>
                       <Col lg={1}><ToggleButton value={this.state.wrap || false} onToggle={this.toggleWrap} /></Col>
-                      <Col componentClass={ControlLabel} lg={1}>Case Sensitive</Col>
+                      <Col componentClass='ControlLabel' lg={1}>Case Sensitive</Col>
                       <Col lg={1}><ToggleButton value={this.state.caseSensitive || false} onToggle={this.toggleCaseSensitive} /></Col>
-                      <Col componentClass={ControlLabel} lg={1}>Filter Logic</Col>
+                      <Col componentClass='ControlLabel' lg={1}>Filter Logic</Col>
                       <Col lg={1}><ToggleButton inactiveLabel={'OR'} activeLabel={'AND'} value={this.state.filterIntersection || false} onToggle={this.toggleFilterIntersection} /></Col>
-                      <Col componentClass={ControlLabel} lg={1}>JIRA</Col>
+                      <Col componentClass='ControlLabel' lg={1}>JIRA</Col>
                       <Col lg={1}><textarea readOnly className="unmoving" value={this.showJIRA()}></textarea></Col>
                       {this.showJobLogs()}
                       {this.showRaw()}
