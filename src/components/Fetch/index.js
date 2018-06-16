@@ -7,11 +7,9 @@ import ToggleButton from 'react-toggle-button';
 import { Button, Form, FormControl, FormGroup, Col, ControlLabel, Collapse} from 'react-bootstrap';
 // $FlowFixMe
 import LogView from '../LogView';
-import PropTypes from 'prop-types';
-import { Bookmarks, type Bookmark } from './Bookmarks';
-import { Filters, type Filter } from './Filters';
-
-import type { Line, ColorMap } from '../../stores';
+import { Bookmarks } from './Bookmarks';
+import { Filters } from './Filters';
+import type { Line, ColorMap, Filter, Bookmark } from '../../stores';
 
 type Params = {
   build: string,
@@ -221,7 +219,7 @@ class Fetch extends React.Component<Props, State> {
     this.setState({scrollLine: lineNum});
   }
 
-  findBookmark(bookmarkList: Bookmark[], lineNum: number) {
+  findBookmark(bookmarkList: Bookmark[], lineNum: number): number {
     return bookmarkList.findIndex(function(bookmark) {
       return bookmark.lineNumber === lineNum;
     });
