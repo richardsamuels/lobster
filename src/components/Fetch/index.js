@@ -20,7 +20,7 @@ type History = {
   search: string
 }
 
-type Props = {
+export type Props = {
   lines: Line[],
   location: {
     search: string,
